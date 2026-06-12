@@ -1,0 +1,22 @@
+{
+  "name": "omniversify-tifinagh-dictionary-api",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "download-dataset": "bun run scripts/download-dataset.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "abjad-convert": "^0.11.0",
+    "hono": "^4.12.25",
+    "tamazight": "^1.0.5"
+  }
+}
