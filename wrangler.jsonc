@@ -3,5 +3,8 @@
   "name": "tifinagh-dictionary-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-12",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DICTIONARY_URL": "https://raw.githubusercontent.com/phaylali/omniversify-tifinagh-dictionary-api/main/data/dictionary.json"
+  }
 }
