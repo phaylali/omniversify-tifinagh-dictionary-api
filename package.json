@@ -9,7 +9,9 @@
     "download-dataset": "bun run scripts/download-dataset.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@cloudflare/workers-types": "^4.20260612.1",
+    "@types/bun": "latest",
+    "wrangler": "^4.100.0"
   },
   "peerDependencies": {
     "typescript": "^5"

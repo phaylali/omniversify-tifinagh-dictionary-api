@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { loadSync, isLoaded, searchArabic, searchEnglish, searchAmazigh } from "./dictionary.ts";
+import { loadSync, loadFromUrl, isLoaded, searchArabic, searchEnglish, searchAmazigh } from "./dictionary.ts";
 import { retype, type Script } from "./retype.ts";
 
 const app = new Hono();
@@ -8,7 +8,11 @@ app.use("/*", cors());
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
-loadSync();
+if (process.env.DICTIONARY_URL) {
+  await loadFromUrl(process.env.DICTIONARY_URL);
+} else {
+  await loadSync();
+}
 
 app.get("/", (c) => c.redirect("/help"));
 
@@ -110,10 +114,12 @@ app.post("/translate", async (c) => {
   });
 });
 
-console.info(`Server starting on http://localhost:${PORT}`);
 export default app;
 
-Bun.serve({
-  port: PORT,
-  fetch: app.fetch,
-});
+if (typeof Bun !== "undefined") {
+  console.info(`Server starting on http://localhost:${PORT}`);
+  Bun.serve({
+    port: PORT,
+    fetch: app.fetch,
+  });
+}

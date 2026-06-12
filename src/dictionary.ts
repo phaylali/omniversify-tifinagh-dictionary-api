@@ -1,6 +1,3 @@
-import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
-
 interface RawEntry {
   amazigh: string;
   arabic: string;
@@ -24,8 +21,6 @@ export interface DictEntry {
 
 type Index = Map<string, DictEntry[]>;
 
-const DATA_PATH = join(import.meta.dir, "..", "data", "dictionary.json");
-
 let entries: DictEntry[] = [];
 let byAmazigh: Index = new Map();
 let byArabic: Index = new Map();
@@ -35,14 +30,7 @@ export function isLoaded(): boolean {
   return entries.length > 0;
 }
 
-export function loadSync(): void {
-  if (!existsSync(DATA_PATH)) {
-    console.warn("No dictionary file found at data/dictionary.json. Run `bun run download-dataset` first.");
-    return;
-  }
-
-  const raw = readFileSync(DATA_PATH, "utf-8");
-  const data = JSON.parse(raw) as { amawal: RawEntry[]; dglai: RawDglaiEntry[] };
+function buildIndexes(data: { amawal: RawEntry[]; dglai: RawDglaiEntry[] }): void {
   const seen = new Set<string>();
 
   for (const e of data.amawal) {
@@ -90,6 +78,38 @@ export function loadSync(): void {
   console.info(`Loaded ${entries.length} dictionary entries`);
 }
 
+export async function loadSync(): Promise<void> {
+  try {
+    const { readFileSync, existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+
+    const dir = import.meta.dir ?? process.cwd();
+    const dataPath = join(dir, "..", "data", "dictionary.json");
+
+    if (!existsSync(dataPath)) {
+      console.warn("No dictionary file found at data/dictionary.json. Run `bun run download-dataset` first.");
+      return;
+    }
+
+    const raw = readFileSync(dataPath, "utf-8");
+    const data = JSON.parse(raw);
+    buildIndexes(data);
+  } catch (err) {
+    console.warn("Dictionary not loaded via filesystem:", (err as Error)?.message ?? err);
+  }
+}
+
+export async function loadFromUrl(url: string): Promise<void> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    buildIndexes(data);
+  } catch (err) {
+    console.error("Failed to load dictionary from URL:", err);
+  }
+}
+
 function pushIndex(map: Index, key: string, entry: DictEntry): void {
   if (!key) return;
   const k = key.toLowerCase();
@@ -105,19 +125,16 @@ function fuzzyMatch(text: string, index: Index): DictEntry[] {
   const t = text.toLowerCase().trim();
   const results: DictEntry[] = [];
 
-  // exact match first
   if (index.has(t)) {
     results.push(...index.get(t)!);
   }
 
-  // starts-with
   for (const [key, vals] of index) {
     if (key.startsWith(t) && key !== t) {
       results.push(...vals);
     }
   }
 
-  // contains
   for (const [key, vals] of index) {
     if (key.includes(t) && !key.startsWith(t) && key !== t) {
       results.push(...vals);
