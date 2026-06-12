@@ -8,15 +8,22 @@ app.use("/*", cors());
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
-if (process.env.DICTIONARY_URL) {
-  await loadFromUrl(process.env.DICTIONARY_URL);
-} else {
-  await loadSync();
+let initPromise: Promise<void> | null = null;
+
+async function ensureDictionary(): Promise<void> {
+  if (isLoaded()) return;
+  if (!initPromise) {
+    initPromise = process.env.DICTIONARY_URL
+      ? loadFromUrl(process.env.DICTIONARY_URL)
+      : loadSync();
+  }
+  return initPromise;
 }
 
 app.get("/", (c) => c.redirect("/help"));
 
-app.get("/help", (c) => {
+app.get("/help", async (c) => {
+  await ensureDictionary();
   return c.json({
     service: "Omniversify Tifinagh Dictionary API",
     version: "1.0.0",
@@ -47,7 +54,7 @@ app.get("/help", (c) => {
         },
       },
     },
-    dictionary: isLoaded() ? "loaded" : "not loaded (run `bun run download-dataset`)",
+    dictionary: isLoaded() ? "loaded" : "loading...",
   });
 });
 
@@ -85,6 +92,8 @@ app.post("/translate", async (c) => {
     return c.json({ error: "Missing required field: text" }, 400);
   }
 
+  await ensureDictionary();
+
   if (!isLoaded()) {
     return c.json({ error: "Dictionary not loaded. Run `bun run download-dataset` first." }, 503);
   }
@@ -117,9 +126,11 @@ app.post("/translate", async (c) => {
 export default app;
 
 if (typeof Bun !== "undefined") {
-  console.info(`Server starting on http://localhost:${PORT}`);
-  Bun.serve({
-    port: PORT,
-    fetch: app.fetch,
+  ensureDictionary().then(() => {
+    console.info(`Server starting on http://localhost:${PORT}`);
+    Bun.serve({
+      port: PORT,
+      fetch: app.fetch,
+    });
   });
 }

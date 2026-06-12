@@ -5,6 +5,6 @@
   "compatibility_date": "2026-06-12",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "DICTIONARY_URL": "https://raw.githubusercontent.com/phaylali/omniversify-tifinagh-dictionary-api/main/data/dictionary.json"
+    "DICTIONARY_URL": "https://raw.githubusercontent.com/phaylali/omniversify-tifinagh-dictionary-api/master/data/dictionary.json"
   }
 }
