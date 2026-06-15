@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
   "name": "omniversify-tifinagh-dictionary-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-12",
