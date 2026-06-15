@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { loadSync, loadFromUrl, isLoaded, searchArabic, searchEnglish, searchAmazigh } from "./dictionary.ts";
+import { loadSync, loadFromUrl, isLoaded, searchArabic, searchEnglish, searchAmazigh, getRandomEntry } from "./dictionary.ts";
 import { retype, type Script } from "./retype.ts";
 
 const app = new Hono();
@@ -41,6 +41,9 @@ app.get("/help", async (c) => {
           response: { input: { text: "ⵎⵔⵃⴱⴰ", script: "tifinagh" }, output: { text: "مرحبا", script: "arabic" } },
         },
       },
+      "GET /api/random": {
+        description: "Get a random dictionary entry",
+      },
       "POST /translate": {
         description: "Look up a word in the Tifinagh dictionary",
         body: {
@@ -56,6 +59,21 @@ app.get("/help", async (c) => {
     },
     dictionary: isLoaded() ? "loaded" : "loading...",
   });
+});
+
+app.get("/api/random", async (c) => {
+  await ensureDictionary();
+
+  if (!isLoaded()) {
+    return c.json({ error: "Dictionary not loaded." }, 503);
+  }
+
+  const entry = getRandomEntry();
+  if (!entry) {
+    return c.json({ error: "No entries available." }, 404);
+  }
+
+  return c.json(entry);
 });
 
 app.post("/retype", async (c) => {
