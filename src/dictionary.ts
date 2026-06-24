@@ -144,6 +144,11 @@ function fuzzyMatch(text: string, index: Index): DictEntry[] {
   return results;
 }
 
+export function getRandomEntry(): DictEntry | null {
+  if (entries.length === 0) return null;
+  return entries[Math.floor(Math.random() * entries.length)];
+}
+
 export function searchAmazigh(text: string): DictEntry[] {
   return fuzzyMatch(text, byAmazigh);
 }
